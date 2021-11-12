@@ -1,0 +1,84 @@
+- name: ahuryn
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Check Ping
+      ping:
+
+    - name: Update servers
+      apt:
+        update_cache: yes
+    
+    
+    - name: Install dependencies for Docker
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Add Docker’s official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add specified repository into sources list
+      ansible.builtin.apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+
+    - name: Update servers
+      apt:
+        update_cache: yes
+
+    - name: Install dependencies for docker
+      apt:
+        name: 
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+
+    - name: Download Compose the Latest Docker Version
+      shell: 'sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose'
+
+    - name: Install python module
+      apt: 
+        name: 
+          - python3
+          - python3-docker
+          - python3-distutils
+          # - python-is-python3 
+          - python3-pip
+        update_cache: yes
+        state: present
+
+    - name: Install pip python & docker
+      shell: 'pip install docker-compose'
+
+    - name: python docker / docker-compse module
+      pip:
+        name:
+          - docker
+          - docker-compose
+
+    - name: Create working directory
+      shell: 'mkdir -p ~/ansible-lesson && cd ~/ansible-lesson'
+
+    - name: Copy docker-compose.yml
+      ansible.builtin.copy:
+        src: docker-compose.yml
+        dest: ~/ansible-lesson/docker-compose.yml
+
+    - name: Start the containers
+      docker_compose:
+        project_src: ~/ansible-lesson
+        files:
+          - docker-compose.yml      
